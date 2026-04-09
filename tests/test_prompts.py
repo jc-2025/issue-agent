@@ -14,7 +14,14 @@ def test_fix_prompt_contains_issue_url():
 def test_fix_prompt_has_quality_rules():
     prompt = build_fix_prompt("https://github.com/owner/repo/issues/1")
     assert "NEVER open a PR with failing tests" in prompt
-    assert "NEVER modify more than 5 files" in prompt
+    assert "NEVER modify more than 10 files" in prompt
+
+
+def test_fix_prompt_handles_features_and_bugs():
+    prompt = build_fix_prompt("https://github.com/owner/repo/issues/1")
+    assert "bug" in prompt.lower()
+    assert "feature" in prompt.lower()
+    assert "Classify the Issue" in prompt
 
 
 def test_graph_prompt_contains_repo_url():

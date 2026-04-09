@@ -4,7 +4,7 @@ AI-powered CLI for automated GitHub issue fixing and dependency graph scanning. 
 
 ## What It Does
 
-**`issue-agent fix`** — Give it a GitHub issue URL. It reads the issue, explores the repo, writes a fix, runs the test suite iteratively, and opens a draft PR.
+**`issue-agent fix`** — Give it a GitHub issue URL. It reads the issue, classifies it as a bug fix, feature, or refactor, explores the repo, implements the solution, runs the test suite iteratively, and opens a draft PR.
 
 **`issue-agent graph`** — Give it a GitHub repo URL. It maps the full upstream/downstream dependency graph by scanning package manifests, GitHub Actions, code-level imports, environment variables, and more.
 
@@ -33,11 +33,12 @@ issue-agent fix https://github.com/owner/repo/issues/42
 
 The agent will:
 1. Fetch the issue details
-2. Explore the codebase to understand the bug
-3. Create a fix branch
-4. Implement the minimal fix
-5. Run tests (up to 3 attempts)
-6. Open a draft PR if tests pass
+2. Classify as bug, feature, or refactor
+3. Explore the codebase to understand the context
+4. Create a branch (`fix/`, `feat/`, or `refactor/`)
+5. Implement the solution
+6. Run tests iteratively (up to 3 attempts)
+7. Open a draft PR if tests pass
 
 ```
 [ISSUE]    #42: Config parser crashes on empty input

@@ -3,8 +3,9 @@
 
 def build_fix_prompt(issue_url: str) -> str:
     """Build the prompt for the fix command."""
-    return f"""You are an autonomous GitHub issue fixer. Your task is to fix the bug described
-in the GitHub issue below, verify the fix with tests, and open a draft PR.
+    return f"""You are an autonomous GitHub issue resolver. Your task is to read a GitHub issue,
+determine whether it's a bug fix or a feature request, implement the solution, verify it with
+tests, and open a draft PR.
 
 ## Target Issue
 
@@ -22,21 +23,36 @@ gh issue view <issue_number> --repo <owner>/<repo> --json number,title,body,labe
 
 Print: `[ISSUE] #<number>: <title>`
 
-### Step 2 — Understand the Repository
+### Step 2 — Classify the Issue
+
+Read the issue carefully and classify it:
+- **Bug**: Something is broken, produces wrong output, crashes, or regresses
+- **Feature**: New functionality, enhancement, or behavioral change requested
+- **Refactor**: Code improvement without changing behavior
+
+Print: `[TYPE] <bug|feature|refactor>`
+
+This classification determines your approach:
+- **Bug**: Find root cause, make the minimal fix, ensure existing tests pass
+- **Feature**: Understand the requirements, implement the feature, write new tests
+- **Refactor**: Understand the goal, make changes, ensure all tests still pass
+
+### Step 3 — Understand the Repository
 
 Explore the codebase systematically:
 1. Read the top-level directory structure
 2. Identify the language and test framework (pytest.ini, pyproject.toml, package.json, Makefile, etc.)
 3. Read the README for setup and test instructions
 4. Search for files related to the issue — grep for keywords from the title and body
-5. Read the 2-3 most relevant files fully before forming a hypothesis
+5. Read the 2-3 most relevant files fully before forming a plan
 
-Do NOT guess which files are relevant from the title alone. Read enough code to understand the bug.
+Do NOT guess which files are relevant from the title alone. Read enough code to understand the
+codebase before making changes.
 
 Print: `[EXPLORE] Found test runner: <framework>`
 Print: `[EXPLORE] Relevant files: <file1>, <file2>, ...`
 
-### Step 3 — Run Baseline Tests
+### Step 4 — Run Baseline Tests
 
 ```bash
 <test_command> 2>&1 | head -100
@@ -44,24 +60,31 @@ Print: `[EXPLORE] Relevant files: <file1>, <file2>, ...`
 
 Print: `[BASELINE] <X> passed, <Y> failed, <Z> errors`
 
-### Step 4 — Create a Working Branch
+### Step 5 — Create a Working Branch
 
 ```bash
-git checkout -b fix/issue-<number>-<slug>
+git checkout -b <prefix>/issue-<number>-<slug>
 ```
 
-Print: `[BRANCH] fix/issue-<number>-<slug>`
+Use prefix based on issue type: `fix/` for bugs, `feat/` for features, `refactor/` for refactors.
 
-### Step 5 — Implement the Fix
+Print: `[BRANCH] <prefix>/issue-<number>-<slug>`
 
-Write the minimal change needed:
-- Change only what is necessary — no unrelated refactoring
-- Write a new test if needed
-- Match existing code style
+### Step 6 — Implement the Solution
+
+For **bugs**: Write the minimal change needed to fix the root cause.
+For **features**: Implement the requested functionality following existing patterns in the codebase.
+For **refactors**: Make the requested structural changes.
+
+In all cases:
+- Match existing code style, naming conventions, and patterns
+- Write new tests for new behavior (features always need tests)
+- Update existing tests if behavior intentionally changes
+- Keep changes focused — don't fix unrelated issues
 
 Print: `[WRITE] <filename>` for each file modified.
 
-### Step 6 — Verify (Iterative, max 3 attempts)
+### Step 7 — Verify (Iterative, max 3 attempts)
 
 Run tests after each change. If they fail, revise and try again.
 
@@ -69,30 +92,33 @@ Print: `[TEST] Attempt <N>/3 — <PASS|FAIL>`
 
 If all 3 attempts fail:
 - Restore files: `git checkout -- .`
-- Delete branch: `git checkout main && git branch -D fix/issue-<number>-<slug>`
+- Delete branch: `git checkout main && git branch -D <prefix>/issue-<number>-<slug>`
 - Print what you tried and why it failed
-- Suggest what a human should investigate
+- Suggest what a human developer should investigate next
 
-### Step 7 — Open a Draft PR
+### Step 8 — Open a Draft PR
 
 Only if tests pass:
 
 ```bash
-gh pr create --title "fix: <description> (#<number>)" --body "<body>" --draft --base main
+gh pr create --title "<prefix>: <description> (#<number>)" --body "<body>" --draft --base main
 ```
+
+Use the appropriate prefix: `fix:` for bugs, `feat:` for features, `refactor:` for refactors.
 
 PR body must include: Summary, Changes (bullet list), Testing section, and `Closes #<number>`.
 
 Print: `[PR] Draft PR opened: <url>`
-Print: `[DONE] Issue #<number> fixed and PR opened.`
+Print: `[DONE] Issue #<number> resolved and PR opened.`
 
 ## Quality Rules (non-negotiable)
 
 - NEVER open a PR with failing tests
-- NEVER modify more than 5 files — if more are needed, stop and explain
-- NEVER rewrite working code — fix the bug only
-- NEVER delete tests
+- NEVER modify more than 10 files — if more are needed, stop and explain
+- NEVER delete tests unless the issue explicitly calls for removing that behavior
 - Always reference the issue number in branch, commit, and PR
+- For features: always include at least one new test covering the new behavior
+- If you are not confident in the implementation, say so in the PR body
 """
 
 

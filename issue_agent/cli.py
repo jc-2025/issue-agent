@@ -15,6 +15,23 @@ def main():
 
 
 @main.command()
+@click.option("--from", "from_project", default=None, help="Import config from an existing project directory.")
+def init(from_project: str):
+    """Set up project conventions for issue-agent.
+
+    Interactive mode asks about your coding standards, test commands,
+    and conventions, then generates CLAUDE.md and .claude/rules/.
+
+    Import mode copies config from another project:
+
+        issue-agent init --from /path/to/other/project
+    """
+    from issue_agent.init import run_init
+
+    run_init(from_project=from_project)
+
+
+@main.command()
 @click.argument("issue_url")
 @click.option("--model", default="claude-sonnet-4-20250514", help="Claude model to use.")
 @click.option("--max-turns", default=50, help="Max agent loop iterations.")

@@ -1,50 +1,67 @@
-# [PROJECT_NAME] Constitution
-<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
+<!-- Sync Impact Report
+Version change: 0.0.0 (template) → 1.0.0 (initial ratification)
+Added sections: Core Principles (I–V), Tech Stack, Development Workflow, Governance
+Removed sections: none (all placeholders replaced)
+Templates requiring updates:
+  ✅ constitution.md updated
+  ⚠ plan-template.md — review for Constitution Check alignment
+  ⚠ spec-template.md — review for scope/requirements alignment
+  ⚠ tasks-template.md — verify task categories match principles
+Follow-up TODOs: none
+-->
+
+# IssueAgent Constitution
 
 ## Core Principles
 
-### [PRINCIPLE_1_NAME]
-<!-- Example: I. Library-First -->
-[PRINCIPLE_1_DESCRIPTION]
-<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
+### I. Claude-First (NON-NEGOTIABLE)
+All AI reasoning, tool use, and agentic behavior MUST be implemented via the Anthropic Claude API.
+No other LLM or AI provider is permitted. The agent loop, tool definitions, and orchestration
+are built around Claude's tool use API exclusively. External AI wrappers (LangChain, etc.) are
+prohibited — use the SDK directly.
 
-### [PRINCIPLE_2_NAME]
-<!-- Example: II. CLI Interface -->
-[PRINCIPLE_2_DESCRIPTION]
-<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
+### II. Agentic Loop Architecture
+The core of this system is a plan → act → observe → repeat loop. Claude MUST drive all
+decisions about which files to read, what changes to make, and when to stop. The loop continues
+until tests pass or a max-iteration limit is reached. No hardcoded decision trees — Claude reasons
+at runtime.
 
-### [PRINCIPLE_3_NAME]
-<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
-[PRINCIPLE_3_DESCRIPTION]
-<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
+### III. Real-World Effects Only (No Mocks in Production)
+The agent operates on real GitHub repos via the GitHub REST API and executes real code in a
+sandboxed subprocess environment. All tool implementations MUST produce real, observable effects.
+Mock tools are only permitted in unit tests.
 
-### [PRINCIPLE_4_NAME]
-<!-- Example: IV. Integration Testing -->
-[PRINCIPLE_4_DESCRIPTION]
-<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
+### IV. Test-Driven Validation
+The agent MUST run the repo's existing test suite after every code change and use the output
+to inform the next step. If no test suite exists, the agent MUST surface this clearly rather
+than assuming success. Tests are the ground truth for "did the fix work."
 
-### [PRINCIPLE_5_NAME]
-<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
-[PRINCIPLE_5_DESCRIPTION]
-<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
+### V. Simplicity and Scope Discipline
+The MVP targets Python repos and straightforward bug-fix issues only. Scope creep into
+architectural changes, multi-file refactors, or non-Python repos is explicitly out of scope
+for v1. YAGNI — build what is needed to demo a working agentic loop, nothing more.
 
-## [SECTION_2_NAME]
-<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
+## Tech Stack
 
-[SECTION_2_CONTENT]
-<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
+- **Language**: Python 3.11+
+- **AI**: Anthropic Claude API (claude-sonnet latest) with tool use
+- **GitHub**: PyGitHub or direct GitHub REST API
+- **Sandbox**: subprocess with temp directory isolation
+- **Interface**: CLI (MVP), optional Next.js frontend later
+- **Dependencies**: anthropic, pygithub, pytest (for own tests)
 
-## [SECTION_3_NAME]
-<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
+## Development Workflow
 
-[SECTION_3_CONTENT]
-<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
+All code is written with Claude Code. Each feature begins with a failing test before
+implementation (red-green-refactor). PRs are small and scoped to a single principle or
+component. The agent should be demoed on a real public Python repo with a real issue before
+considering v1 complete.
 
 ## Governance
-<!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
 
-[GOVERNANCE_RULES]
-<!-- Example: All PRs/reviews must verify compliance; Complexity must be justified; Use [GUIDANCE_FILE] for runtime development guidance -->
+This constitution supersedes all other practices on this project. Amendments require updating
+this file with a version bump and a rationale comment. All implementation decisions MUST be
+traceable to one of the five principles above. If a decision cannot be justified by a principle,
+either reject the decision or amend the constitution first.
 
-**Version**: [CONSTITUTION_VERSION] | **Ratified**: [RATIFICATION_DATE] | **Last Amended**: [LAST_AMENDED_DATE]
-<!-- Example: Version: 2.1.1 | Ratified: 2025-06-13 | Last Amended: 2025-07-16 -->
+**Version**: 1.0.0 | **Ratified**: 2026-04-08 | **Last Amended**: 2026-04-08
